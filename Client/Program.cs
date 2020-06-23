@@ -18,6 +18,9 @@
 
 using System.Net.Http;
 using System.Threading.Tasks;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -32,6 +35,14 @@ namespace Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
+
+            builder.Services
+                .AddBlazorise(options =>
+                {
+                    options.ChangeTextOnKeyPress = true;
+                })
+                .AddBootstrapProviders()
+                .AddFontAwesomeIcons();
 
             builder.Services.AddSingleton(services =>
             {
@@ -48,7 +59,13 @@ namespace Client
                 return GrpcChannel.ForAddress(backendUrl, new GrpcChannelOptions { HttpHandler = httpHandler });
             });
 
-            await builder.Build().RunAsync();
+            var host = builder.Build();
+
+            host.Services
+                .UseBootstrapProviders()
+                .UseFontAwesomeIcons();
+
+            await host.RunAsync();
         }
     }
 }
