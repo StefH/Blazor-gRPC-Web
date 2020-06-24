@@ -49,5 +49,8 @@ else
     {
         var client = new WeatherForecasts.WeatherForecastsClient(Channel);
         forecasts = (await client.GetWeatherForecastsAsync(new Empty())).Forecasts;
+
+        var client2 = new FileUpload.FileUploadClient(Channel);
+        var response = await client2.UploadAsync(new UploadRequest {});
     }
 }

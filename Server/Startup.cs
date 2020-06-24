@@ -60,6 +60,7 @@ namespace Server
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<CounterService>().EnableGrpcWeb();
                 endpoints.MapFallbackToFile("index.html");

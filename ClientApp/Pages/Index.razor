@@ -1,0 +1,68 @@
+﻿@page "/"
+@using System.IO
+@using Google.Protobuf
+@using Grpc.Core
+
+@inject GrpcChannel Channel
+
+<Row>
+    @Size
+
+    <Column ColumnSize="ColumnSize.Is2">
+        <Field>
+            <FileEdit Changed="@InputFileChanged" Multiple="false" Filter=".proto" />
+        </Field>
+
+    </Column>
+
+</Row>
+
+<button class="btn btn-primary" @onclick="Send">Send file contents</button>
+
+@code
+{
+    public byte[] Content;
+    public Stream Stream;
+    public int Size;
+
+    private async Task Send()
+    {
+        var client = new FileUpload.FileUploadClient(Channel);
+        var response = await client.UploadAsync(new UploadRequest { FileContent = ByteString.CopyFrom(Content) });
+
+        try
+        {
+            Size = response.FileSize;
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+        {
+            // Ignore exception from cancellation
+        }
+    }
+
+    async Task InputFileChanged(FileChangedEventArgs e)
+    {
+        try
+        {
+            var file = e.Files.First();
+
+            // A stream is going to be the destination stream we're writing to.
+            using (var stream = new MemoryStream())
+            {
+                // Here we're telling the FileEdit where to write the upload result
+                await file.WriteToStreamAsync(stream);
+
+                // Once we reach this line it means the file is fully uploaded.
+                // In this case we're going to offset to the beginning of file
+                // so we can read it.
+                stream.Seek(0, SeekOrigin.Begin);
+
+                Content = stream.ToArray();
+                //Size = Content.Length;
+            }
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    } }
