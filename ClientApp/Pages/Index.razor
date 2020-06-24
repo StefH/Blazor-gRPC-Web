@@ -12,12 +12,18 @@
         <Field>
             <FileEdit Changed="@InputFileChanged" Multiple="false" Filter=".proto" />
         </Field>
-
     </Column>
 
 </Row>
 
-<button class="btn btn-primary" @onclick="Send">Send file contents</button>
+<Button Size="ButtonSize.Small" Color="Color.Primary" Clicked="Send">Send file contents</Button>
+
+@if (Size > 0)
+{
+    <div>
+        <img src="/grpc-logo.png" alt="gRPC logo"/>
+    </div>
+}
 
 @code
 {
