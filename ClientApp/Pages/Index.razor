@@ -18,7 +18,11 @@
 
 <Button Size="ButtonSize.Small" Color="Color.Primary" Clicked="Send">Send file contents</Button>
 
-@if (Size > 0)
+@if (Loading)
+{
+    <div>Loading...</div>
+}
+else @if (Size > 0)
 {
     <div>
         <img src="/grpc-logo.png" alt="gRPC logo"/>
@@ -30,15 +34,19 @@
     public byte[] Content;
     public Stream Stream;
     public int Size;
+    public bool Loading;
 
     private async Task Send()
     {
         var client = new FileUpload.FileUploadClient(Channel);
+
+        Loading = true;
         var response = await client.UploadAsync(new UploadRequest { FileContent = ByteString.CopyFrom(Content) });
 
         try
         {
             Size = response.FileSize;
+            Loading = false;
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
         {

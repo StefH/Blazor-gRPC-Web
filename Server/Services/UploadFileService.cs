@@ -9,7 +9,7 @@ namespace Server.Services
     {
         public override async Task<UploadResponse> Upload(UploadRequest request, ServerCallContext context)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(3));
             
             var bytes = request.FileContent;
 
