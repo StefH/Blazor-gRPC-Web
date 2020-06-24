@@ -45,6 +45,9 @@ namespace ClientApp
                 return GrpcChannel.ForAddress(backendUrl, new GrpcChannelOptions { HttpHandler = httpHandler });
             });
 
+            // HttpClient
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
             var host = builder.Build();
 
             host.Services

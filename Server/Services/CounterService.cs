@@ -20,9 +20,11 @@ using System;
 using System.Threading.Tasks;
 using Count;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Services
 {
+    [Authorize]
     public class CounterService : Counter.CounterBase
     {
         public override async Task StartCounter(CounterRequest request, IServerStreamWriter<CounterResponse> responseStream, ServerCallContext context)

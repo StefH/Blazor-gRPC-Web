@@ -41,6 +41,7 @@ else @if (Size > 0)
         var client = new FileUpload.FileUploadClient(Channel);
 
         Loading = true;
+        
         var response = await client.UploadAsync(new UploadRequest { FileContent = ByteString.CopyFrom(Content) });
 
         try

@@ -8,6 +8,7 @@
     <Protobuf Include="..\Proto\weather.proto" GrpcServices="Server" Link="Protos\weather.proto" />
     <Protobuf Include="..\Proto\count.proto" GrpcServices="Server" Link="Protos\count.proto" />
     <Protobuf Include="..\Proto\fileupload.proto" GrpcServices="Server" Link="Protos\fileupload.proto" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.5" />
 
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.0" />
