@@ -3,12 +3,14 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 
 namespace ClientAppAuthenticated.Pages
 {
     [Authorize]
     public partial class FetchData
     {
+        [Inject]
         public HttpClient Http { get; set; }
 
         private WeatherForecast[] forecasts;

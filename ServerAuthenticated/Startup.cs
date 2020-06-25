@@ -18,13 +18,17 @@
 
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -44,27 +48,14 @@ namespace Server
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
             });
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
-                {
-                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireClaim(ClaimTypes.Name);
-                });
-            });
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters =
-                        new TokenValidationParameters
-                        {
-                            ValidateAudience = false,
-                            ValidateIssuer = false,
-                            ValidateActor = false,
-                            ValidateLifetime = true,
-                            IssuerSigningKey = SecurityKey
-                        };
-                });
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false)
+                .Build();
+
+            // https://austincooper.dev/2020/02/02/azure-active-directory-authentication-in-asp.net-core-3.1/
+            services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+                .AddAzureAD(options => config.Bind("AzureAd", options));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -83,17 +74,17 @@ namespace Server
 
             app.UseRouting();
 
-            app.UseAuthentication();
+            app.UseAuthentication(); // UseAuthentication must come before UseAuthorization
             app.UseAuthorization();
 
             app.UseGrpcWeb();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/generateJwtToken", context =>
-                {
-                    return context.Response.WriteAsync(GenerateJwtToken(context.Request.Query["name"]));
-                });
+                //endpoints.MapGet("/generateJwtToken", context =>
+                //{
+                //    return context.Response.WriteAsync(GenerateJwtToken(context.Request.Query["name"]));
+                //});
 
                 endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
