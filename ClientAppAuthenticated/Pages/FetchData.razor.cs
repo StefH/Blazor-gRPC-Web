@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Weather;
 
 namespace ClientAppAuthenticated.Pages
 {
@@ -11,24 +15,36 @@ namespace ClientAppAuthenticated.Pages
     public partial class FetchData
     {
         [Inject]
-        public HttpClient Http { get; set; }
+        GrpcChannel Channel { get; set; }
+        //public HttpClient Http { get; set; }
 
-        private WeatherForecast[] forecasts;
+        private IList<WeatherForecast>? forecasts;
 
         protected override async Task OnInitializedAsync()
         {
-            forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+            var client = new WeatherForecasts.WeatherForecastsClient(Channel);
+            forecasts = (await client.GetWeatherForecastsAsync(new Empty())).Forecasts;
+
+            //var client2 = new FileUpload.FileUploadClient(Channel);
+            //var response = await client2.UploadAsync(new UploadRequest { });
         }
 
-        public class WeatherForecast
-        {
-            public DateTime Date { get; set; }
+        //private WeatherForecast[] forecasts;
 
-            public int TemperatureC { get; set; }
+        //protected override async Task OnInitializedAsync()
+        //{
+        //    forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        //}
 
-            public string Summary { get; set; }
+        //public class WeatherForecast
+        //{
+        //    public DateTime Date { get; set; }
 
-            public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-        }
+        //    public int TemperatureC { get; set; }
+
+        //    public string Summary { get; set; }
+
+        //    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        //}
     }
 }

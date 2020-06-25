@@ -16,8 +16,6 @@
 
 #endregion
 
-using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -26,7 +24,6 @@ using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +53,32 @@ namespace Server
             // https://austincooper.dev/2020/02/02/azure-active-directory-authentication-in-asp.net-core-3.1/
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                 .AddAzureAD(options => config.Bind("AzureAd", options));
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
+                {
+                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireClaim(ClaimTypes.Name);
+                });
+            });
+
+            services.Configure<JwtBearerOptions>(
+                AzureADDefaults.JwtBearerAuthenticationScheme, options =>
+                {
+                    options.TokenValidationParameters.NameClaimType = "name";
+                });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllHeaders",
+                      builder =>
+                      {
+                          builder.AllowAnyOrigin()
+                                 .AllowAnyHeader()
+                                 .AllowAnyMethod();
+                      });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +91,9 @@ namespace Server
                 app.UseDeveloperExceptionPage();
                 app.UseWebAssemblyDebugging();
             }
+
+            // Shows UseCors with named policy.
+            app.UseCors("AllowAllHeaders");
 
             app.UseStaticFiles();
             app.UseBlazorFrameworkFiles();
@@ -88,25 +114,13 @@ namespace Server
 
                 endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
-                endpoints.MapGrpcService<CounterService>().EnableGrpcWeb();
+
+                // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
+                endpoints.MapGrpcService<CounterService>().EnableGrpcWeb().RequireAuthorization();
                 endpoints.MapFallbackToFile("index.html");
+
+                endpoints.MapControllers();
             });
         }
-
-        private string GenerateJwtToken(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new InvalidOperationException("Name is not specified.");
-            }
-
-            var claims = new[] { new Claim(ClaimTypes.Name, name) };
-            var credentials = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken("ExampleServer", "ExampleClients", claims, expires: DateTime.Now.AddSeconds(60), signingCredentials: credentials);
-            return JwtTokenHandler.WriteToken(token);
-        }
-
-        private readonly JwtSecurityTokenHandler JwtTokenHandler = new JwtSecurityTokenHandler();
-        private readonly SymmetricSecurityKey SecurityKey = new SymmetricSecurityKey(Guid.NewGuid().ToByteArray());
     }
 }

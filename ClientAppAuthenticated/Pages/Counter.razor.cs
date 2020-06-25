@@ -35,7 +35,7 @@ namespace ClientAppAuthenticated.Pages
             headers.Add("Authorization", $"Bearer {Token}");
 
             var client = new Count.Counter.CounterClient(Channel);
-            var call = client.StartCounter(new CounterRequest() { Start = currentCount }, headers, cancellationToken: cts.Token);
+            var call = client.StartCounter(new CounterRequest() { Start = currentCount }, cancellationToken: cts.Token);
 
             try
             {
