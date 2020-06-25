@@ -1,2 +1,3 @@
-# Blazor-gRPC-Web
-Blazor-gRPC-Web
+# Blazor gRPC-Web with Azure Active Directory Authentication
+
+
