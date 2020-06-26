@@ -83,7 +83,7 @@ namespace Server
             app.UseAuthentication(); // UseAuthentication must come before UseAuthorization
             app.UseAuthorization();
 
-            app.UseGrpcWeb();
+            app.UseGrpcWeb(); // Must be added between UseRouting and UseEndpoints
 
             // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
             app.UseCors();
