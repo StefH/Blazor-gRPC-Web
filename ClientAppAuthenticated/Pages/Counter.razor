@@ -1,11 +1,6 @@
 ﻿@page "/counter"
 <h1>Counter</h1>
 
-<Field>
-    <Button Size="ButtonSize.Small" Color="Color.Primary" Clicked="GetToken">Get JWT token</Button>
-    Token is @(!string.IsNullOrEmpty(Token) ? "Present" : "N/A")
-</Field>
-
 <div>
     <p>Current count: @currentCount</p>
 

@@ -39,49 +39,32 @@ namespace Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddGrpc();
-            services.AddResponseCompression(opts =>
-            {
-                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
-            });
-
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false)
                 .Build();
 
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
+            });
+
             // https://austincooper.dev/2020/02/02/azure-active-directory-authentication-in-asp.net-core-3.1/
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                 .AddAzureAD(options => config.Bind("AzureAd", options));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
-                {
-                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireClaim(ClaimTypes.Name);
-                });
-            });
+            services.AddGrpc();
 
-            services.Configure<JwtBearerOptions>(
-                AzureADDefaults.JwtBearerAuthenticationScheme, options =>
-                {
-                    options.TokenValidationParameters.NameClaimType = "name";
-                });
-
-            services.AddCors(options =>
+            // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
+            services.AddCors(o => o.AddPolicy("AllowAll", builder =>
             {
-                options.AddPolicy("AllowAllHeaders",
-                      builder =>
-                      {
-                          builder.AllowAnyOrigin()
-                                 .AllowAnyHeader()
-                                 .AllowAnyMethod();
-                      });
-            });
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader()
+                       .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+            }));
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseResponseCompression();
@@ -91,9 +74,6 @@ namespace Server
                 app.UseDeveloperExceptionPage();
                 app.UseWebAssemblyDebugging();
             }
-
-            // Shows UseCors with named policy.
-            app.UseCors("AllowAllHeaders");
 
             app.UseStaticFiles();
             app.UseBlazorFrameworkFiles();
@@ -105,18 +85,19 @@ namespace Server
 
             app.UseGrpcWeb();
 
+            // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
+            app.UseCors();
+
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapGet("/generateJwtToken", context =>
-                //{
-                //    return context.Response.WriteAsync(GenerateJwtToken(context.Request.Query["name"]));
-                //});
-
                 endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
 
-                // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
-                endpoints.MapGrpcService<CounterService>().EnableGrpcWeb().RequireAuthorization();
+
+                endpoints.MapGrpcService<CounterService>().EnableGrpcWeb()
+                    //.RequireAuthorization() // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
+                    .RequireCors("AllowAll"); // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
+
                 endpoints.MapFallbackToFile("index.html");
 
                 endpoints.MapControllers();

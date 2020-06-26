@@ -43,7 +43,6 @@ namespace ClientAppAuthenticated
             });
 
             // HttpClient
-            //builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
             builder.Services.AddMsalAuthentication(options =>
