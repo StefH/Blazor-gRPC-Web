@@ -1,13 +1,15 @@
 using System;
 using System.Net.Http;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Text;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
+using Grpc.Net.Client;
+using Grpc.Net.Client.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmGrpcWithAADAuth.Client
 {
@@ -27,8 +29,29 @@ namespace BlazorWasmGrpcWithAADAuth.Client
             builder.Services.AddMsalAuthentication(options =>
             {
                 builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-                // options.ProviderOptions.DefaultAccessTokenScopes.Add("api://https://localhost:44375/API.Access");
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("821eb724-edb8-4dba-b425-3f953250c0ae/API.Access");
+            });
+
+            builder.Services
+                .AddBlazorise(options =>
+                {
+                    options.ChangeTextOnKeyPress = true;
+                })
+                .AddBootstrapProviders()
+                .AddFontAwesomeIcons();
+
+            builder.Services.AddSingleton(services =>
+            {
+                // Get the service address from appsettings.json
+                //var config = services.GetRequiredService<IConfiguration>();
+                //var backendUrl = config["BackendUrl"];
+
+                var ba = services.GetRequiredService<BaseAddressAuthorizationMessageHandler>();
+
+                // Create a channel with a GrpcWebHandler that is addressed to the backend server.
+                // GrpcWebText is used because server streaming requires it.
+                var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, ba);//new HttpClientHandler()
+                return GrpcChannel.ForAddress(builder.HostEnvironment.BaseAddress, new GrpcChannelOptions { HttpHandler = httpHandler });
             });
 
             await builder.Build().RunAsync();
