@@ -9,17 +9,10 @@ namespace Blazored.SessionStorage
     public class MySessionStorage : IMySessionStorage
     {
         private readonly IJSRuntime _jSRuntime;
-        private readonly IJSInProcessRuntime _jSInProcessRuntime;
-        private readonly JsonSerializerOptions _jsonOptions;
-
-        public event EventHandler<ChangingEventArgs> Changing;
-        public event EventHandler<ChangedEventArgs> Changed;
 
         public MySessionStorage(IJSRuntime jSRuntime)
         {
             _jSRuntime = jSRuntime;
-            
-            _jSInProcessRuntime = jSRuntime as IJSInProcessRuntime;
         }
 
 
