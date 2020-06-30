@@ -2,13 +2,16 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Blazored.SessionStorage;
 using Count;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Cors;
 
 namespace ClientAppAuthenticated.Pages
 {
+    [EnableCors("AllowAll")]
     public partial class Counter
     {
         [Inject]
@@ -17,14 +20,27 @@ namespace ClientAppAuthenticated.Pages
         [Inject]
         public GrpcChannel Channel { get; set; }
 
+        [Inject]
+        IMySessionStorage SessionStorage { get; set; }
+
         private int currentCount = 0;
         private CancellationTokenSource? cts;
         private string Token;
         private string Error;
 
+        protected async override Task OnInitializedAsync()
+        {
+            //SessionStorageService x;
+            //x.SetItem();
+            //var xxxx = await x.GetItemAsync<string>("msal");
+
+            Token = await SessionStorage.GetStringAsync("msal.idtoken"); // await Http.GetStringAsync("/generateJwtToken?name=stef");
+            //return base.OnInitializedAsync();
+        }
+
         private async Task GetToken()
         {
-            Token = await Http.GetStringAsync("/generateJwtToken?name=stef");
+            //Token = await SessionStorage.GetStringAsync("msal.idtoken"); // await Http.GetStringAsync("/generateJwtToken?name=stef");
         }
 
         private async Task IncrementCount()
@@ -32,10 +48,13 @@ namespace ClientAppAuthenticated.Pages
             cts = new CancellationTokenSource();
 
             var headers = new Metadata();
+
+            //AppServiceAuthSession s;
+            //Token = await SessionStorage.GetStringAsync("msal.idtoken"); // await Http.GetStringAsync("/generateJwtToken?name=stef");
             headers.Add("Authorization", $"Bearer {Token}");
 
             var client = new Count.Counter.CounterClient(Channel);
-            var call = client.StartCounter(new CounterRequest() { Start = currentCount }, cancellationToken: cts.Token);
+            var call = client.StartCounter(new CounterRequest() { Start = currentCount }, headers, cancellationToken: cts.Token);
 
             try
             {

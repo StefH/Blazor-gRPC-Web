@@ -2,15 +2,17 @@
 <h1>Counter</h1>
 
 <div>
+    <p>Token = @Token</p>
     <p>Current count: @currentCount</p>
 
     <button class="btn btn-primary" @onclick="IncrementCount" disabled="@(cts != null)">Start</button>
     <button class="btn btn-primary" @onclick="StopCount" disabled="@(cts == null)">Stop</button>
 
-    Error = <div>@Error</div>
+    Error =
+    <div>@Error</div>
 
     <div>
-        <img src="/grpc-logo.png" alt="gRPC logo" />
+        <img src="/grpc-logo.png" alt="gRPC logo"/>
         <p>
             Incrementing count streamed from a gRPC service.
         </p>

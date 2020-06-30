@@ -49,9 +49,37 @@ namespace Server
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
             });
 
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
+                {
+                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireClaim(ClaimTypes.Name);
+                });
+            });
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //    .AddJwtBearer(options =>
+            //    {
+            //        options.TokenValidationParameters =
+            //            new TokenValidationParameters
+            //            {
+            //                ValidateAudience = false,
+            //                ValidateIssuer = false,
+            //                ValidateActor = false,
+            //                ValidateLifetime = false
+            //            };
+            //    });
+
             // https://austincooper.dev/2020/02/02/azure-active-directory-authentication-in-asp.net-core-3.1/
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                 .AddAzureAD(options => config.Bind("AzureAd", options));
+
+            //services.AddAuthorization();
+            //services.AddAuthorizationPolicyEvaluator();
+            //services.AddAuthentication(AzureADDefaults.BearerAuthenticationScheme)
+            //    .AddAzureADBearer(options => config.Bind("AzureAd", options));
+
+            services.AddControllers();
 
             services.AddGrpc();
 
@@ -80,14 +108,14 @@ namespace Server
 
             app.UseRouting();
 
+            // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
+            app.UseCors();
+
             app.UseAuthentication(); // UseAuthentication must come before UseAuthorization
             app.UseAuthorization();
 
             app.UseGrpcWeb(); // Must be added between UseRouting and UseEndpoints
-
-            // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
-            app.UseCors();
-
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
@@ -95,7 +123,7 @@ namespace Server
 
 
                 endpoints.MapGrpcService<CounterService>().EnableGrpcWeb()
-                    //.RequireAuthorization() // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
+                    .RequireAuthorization() // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
                     .RequireCors("AllowAll"); // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
 
                 endpoints.MapFallbackToFile("index.html");

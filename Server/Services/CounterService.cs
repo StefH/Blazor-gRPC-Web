@@ -25,8 +25,8 @@ using Microsoft.AspNetCore.Cors;
 
 namespace Server.Services
 {
-    [Authorize]
-    [EnableCors("AllowAll")]
+    //[Authorize]
+    //[EnableCors("AllowAll")]
     public class CounterService : Counter.CounterBase
     {
         public override async Task StartCounter(CounterRequest request, IServerStreamWriter<CounterResponse> responseStream, ServerCallContext context)
