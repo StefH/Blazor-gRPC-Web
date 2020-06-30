@@ -1,8 +1,6 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Blazored.SessionStorage;
-using ClientAppAuthenticated;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
@@ -18,8 +16,6 @@ namespace BlazorWasmGrpcWithAADAuth.Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
-
-            builder.Services.AddScoped<IMySessionStorage, MySessionStorage>();
 
             builder.Services.AddHttpClient("BlazorWasmGrpcWithAADAuth.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
@@ -38,7 +34,7 @@ namespace BlazorWasmGrpcWithAADAuth.Client
                 // Get the service address from appsettings.json
                 //var config = services.GetRequiredService<IConfiguration>();
                 //var backendUrl = config["BackendUrl"];
-                
+
                 // Create a channel with a GrpcWebHandler that is addressed to the backend server.
                 // GrpcWebText is used because server streaming requires it.
                 var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler());//new HttpClientHandler()

@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using ClientAppAuthenticated;
 using Count;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -19,13 +18,13 @@ namespace BlazorWasmGrpcWithAADAuth.Client.Pages
     public partial class Counter
     {
         [Inject]
+        public NavigationManager _navigation { get; set; }
+
+        [Inject]
         public HttpClient Http { get; set; }
 
         [Inject]
         public GrpcChannel Channel { get; set; }
-
-        [Inject]
-        IMySessionStorage SessionStorage { get; set; }
 
         private int currentCount = 0;
         private CancellationTokenSource? cts;
@@ -34,12 +33,6 @@ namespace BlazorWasmGrpcWithAADAuth.Client.Pages
 
         [Inject]
         public IAccessTokenProvider TokenProvider { get; set; }
-
-        protected async override Task OnInitializedAsync()
-        {
-            Model.Token = await SessionStorage.GetStringAsync("msal.idtoken");
-            await base.OnInitializedAsync();
-        }
 
         private async Task IncrementCount()
         {
@@ -57,6 +50,7 @@ namespace BlazorWasmGrpcWithAADAuth.Client.Pages
             else
             {
                 Model.Token = "!!";
+                _navigation.NavigateTo(tokenResult.RedirectUrl);
             }
 
             var headers = new Metadata
@@ -80,6 +74,11 @@ namespace BlazorWasmGrpcWithAADAuth.Client.Pages
             {
                 // Ignore exception from cancellation
                 Error = rpcException.Message;
+            }
+            catch (RpcException rpcException) when (rpcException.StatusCode == StatusCode.Unauthenticated)
+            {
+                Error = rpcException.Message;
+                
             }
             catch (Exception exception)
             {
