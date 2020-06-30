@@ -18,17 +18,14 @@
 
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
 using Server.Services;
 
 namespace Server
@@ -49,30 +46,30 @@ namespace Server
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
             });
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
-                {
-                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireClaim(ClaimTypes.Name);
-                });
-            });
-            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            //    .AddJwtBearer(options =>
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
             //    {
-            //        options.TokenValidationParameters =
-            //            new TokenValidationParameters
-            //            {
-            //                ValidateAudience = false,
-            //                ValidateIssuer = false,
-            //                ValidateActor = false,
-            //                ValidateLifetime = false
-            //            };
+            //        //policy.AddAuthenticationSchemes(AzureADDefaults.AuthenticationScheme);
+            //        //policy.AddAuthenticationSchemes(AzureADDefaults.BearerAuthenticationScheme);
+            //        policy.AddAuthenticationSchemes(AzureADDefaults.JwtBearerAuthenticationScheme);
+            //        policy.RequireClaim(ClaimTypes.Name);
             //    });
+            //});
 
             // https://austincooper.dev/2020/02/02/azure-active-directory-authentication-in-asp.net-core-3.1/
+            //services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+            //    .AddAzureAD(options => config.Bind("AzureAd", options));
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                .AddAzureAD(options => config.Bind("AzureAd", options));
+                .AddAzureAD(options =>
+                {
+                    
+                    config.Bind("AzureAd", options);
+
+                    options.CallbackPath = "/authentication/login";
+                });
+            //services.AddAuthentication(AzureADDefaults.BearerAuthenticationScheme)
+            //    .AddAzureAD(options => config.Bind("AzureAd", options));
 
             //services.AddAuthorization();
             //services.AddAuthorizationPolicyEvaluator();
@@ -118,17 +115,17 @@ namespace Server
             
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
+
                 endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
                 endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
-
-
+                
                 endpoints.MapGrpcService<CounterService>().EnableGrpcWeb()
                     .RequireAuthorization() // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
                     .RequireCors("AllowAll"); // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
 
                 endpoints.MapFallbackToFile("index.html");
 
-                endpoints.MapControllers();
             });
         }
     }

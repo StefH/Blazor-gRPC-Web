@@ -45,22 +45,28 @@ namespace ClientAppAuthenticated
                 
                 // GrpcWebText is used because server streaming requires it.
                 var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler());
-                return GrpcChannel.ForAddress(backendUrl, new GrpcChannelOptions { HttpHandler = httpHandler });
+                return GrpcChannel.ForAddress(builder.HostEnvironment.BaseAddress, new GrpcChannelOptions { HttpHandler = httpHandler });
             });
 
             // HttpClient
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-            //builder.Services.AddHttpClient("BlazorApp.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
-            //    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
-
-            //// Supply HttpClient instances that include access tokens when making requests to the server project
-            //builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BlazorApp.ServerAPI"));
-
             builder.Services.AddMsalAuthentication(options =>
             {
                 builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
 
+                //options.ProviderOptions.Authentication.
+
+                //options.ProviderOptions.DefaultAccessTokenScopes.Add("api://04262393-42ef-4ae6-948b-f8a0f616ebdf/counter-grpc");
+                //options.ProviderOptions.DefaultAccessTokenScopes.Add("04262393-42ef-4ae6-948b-f8a0f616ebdf/counter-grpc");
+                //options.ProviderOptions.DefaultAccessTokenScopes.Add("https://stefheyenrathgmail.onmicrosoft.com/04262393-42ef-4ae6-948b-f8a0f616ebdf/counter-grpc");
+                //
+                /*
+                 * https://login.microsoftonline.com/020b0cf3-d6b2-464e-9b2d-45e124244428",
+    "ClientId": "04262393-42ef-4ae6-948b-f8a0f616ebdf",
+                 */
+
+                // options.ProviderOptions.Cache.CacheLocation = "localStorage";
                 options.ProviderOptions.Cache.StoreAuthStateInCookie = true;
             });
 
@@ -75,13 +81,13 @@ namespace ClientAppAuthenticated
             //});
 
             // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
-            //builder.Services.AddCors(o => o.AddPolicy("AllowAll", builder =>
-            //{
-            //    builder.AllowAnyOrigin()
-            //        .AllowAnyMethod()
-            //        .AllowAnyHeader()
-            //        .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
-            //}));
+            builder.Services.AddCors(o => o.AddPolicy("AllowAll", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+            }));
 
             var host = builder.Build();
 

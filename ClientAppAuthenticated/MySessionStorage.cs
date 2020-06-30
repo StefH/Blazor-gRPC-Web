@@ -15,13 +15,20 @@ namespace Blazored.SessionStorage
             _jSRuntime = jSRuntime;
         }
 
-
         public async Task<string> GetStringAsync(string key)
         {
             if (string.IsNullOrEmpty(key))
                 throw new ArgumentNullException(nameof(key));
 
             return await _jSRuntime.InvokeAsync<string>("sessionStorage.getItem", key);
+        }
+
+        public async Task<string> GetLocalStringAsync(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentNullException(nameof(key));
+
+            return await _jSRuntime.InvokeAsync<string>("localStorage.getItem", key);
         }
     }
 }
