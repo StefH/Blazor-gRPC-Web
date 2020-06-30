@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using Server.Services;
 
 namespace BlazorWasmGrpcWithAADAuth.Server
 {
@@ -27,6 +28,8 @@ namespace BlazorWasmGrpcWithAADAuth.Server
             services.AddAuthentication(AzureADDefaults.BearerAuthenticationScheme)
                 .AddAzureADBearer(options => Configuration.Bind("AzureAd", options));
 
+            services.AddGrpc();
+            services.AddControllers();
             services.AddControllersWithViews();
             services.AddRazorPages();
         }
@@ -52,11 +55,20 @@ namespace BlazorWasmGrpcWithAADAuth.Server
 
             app.UseRouting();
 
-            app.UseAuthentication();
+            app.UseAuthentication(); // UseAuthentication must come before UseAuthorization
             app.UseAuthorization();
+
+            app.UseGrpcWeb(); // Must be added between UseRouting and UseEndpoints
 
             app.UseEndpoints(endpoints =>
             {
+                //endpoints.MapGrpcService<UploadFileService>().EnableGrpcWeb();
+                //endpoints.MapGrpcService<WeatherService>().EnableGrpcWeb();
+
+                endpoints.MapGrpcService<CounterService>().EnableGrpcWeb();
+                   // .RequireAuthorization() // https://blog.sanderaernouts.com/grpc-aspnetcore-azure-ad-authentication
+                    //.RequireCors("AllowAll"); // https://docs.microsoft.com/en-us/aspnet/core/grpc/browser?view=aspnetcore-3.1#grpc-web-and-cors
+
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");

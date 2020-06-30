@@ -1,9 +1,8 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Blazorise;
-using Blazorise.Bootstrap;
-using Blazorise.Icons.FontAwesome;
+using Blazored.SessionStorage;
+using ClientAppAuthenticated;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
@@ -20,6 +19,8 @@ namespace BlazorWasmGrpcWithAADAuth.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 
+            builder.Services.AddScoped<IMySessionStorage, MySessionStorage>();
+
             builder.Services.AddHttpClient("BlazorWasmGrpcWithAADAuth.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
@@ -32,25 +33,15 @@ namespace BlazorWasmGrpcWithAADAuth.Client
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("821eb724-edb8-4dba-b425-3f953250c0ae/API.Access");
             });
 
-            builder.Services
-                .AddBlazorise(options =>
-                {
-                    options.ChangeTextOnKeyPress = true;
-                })
-                .AddBootstrapProviders()
-                .AddFontAwesomeIcons();
-
             builder.Services.AddSingleton(services =>
             {
                 // Get the service address from appsettings.json
                 //var config = services.GetRequiredService<IConfiguration>();
                 //var backendUrl = config["BackendUrl"];
-
-                var ba = services.GetRequiredService<BaseAddressAuthorizationMessageHandler>();
-
+                
                 // Create a channel with a GrpcWebHandler that is addressed to the backend server.
                 // GrpcWebText is used because server streaming requires it.
-                var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, ba);//new HttpClientHandler()
+                var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler());//new HttpClientHandler()
                 return GrpcChannel.ForAddress(builder.HostEnvironment.BaseAddress, new GrpcChannelOptions { HttpHandler = httpHandler });
             });
 

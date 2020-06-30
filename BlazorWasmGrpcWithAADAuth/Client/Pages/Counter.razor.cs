@@ -45,9 +45,10 @@ namespace BlazorWasmGrpcWithAADAuth.Client.Pages
         {
             cts = new CancellationTokenSource();
 
-           
-
-            var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions());
+            var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "821eb724-edb8-4dba-b425-3f953250c0ae/API.Access" }
+            });
 
             if (tokenResult.TryGetToken(out var token))
             {
